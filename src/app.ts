@@ -14,12 +14,12 @@ app.use(express.urlencoded({ extended: false }));
 // keep them in alphabetical order
 app.use("/",indexRouter );
 app.use("/auth", authRouter);
-app.use("/user",)
+app.use("/user",userRouter)
 
 // catch 404 and forward to error handler
-app.use((req: Request, res: Response, next: NextFunction) => {
-  next(createError(404));
-});
+// app.use((req: Request, res: Response, next: NextFunction) => {
+//   next(createError(404));
+// });
 
 // interface IError {
 //   status?: number;
