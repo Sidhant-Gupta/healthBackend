@@ -4,6 +4,7 @@ import { ErrorMsg } from "../classes/CommonCL";
 import { constants } from "../constants/constants";
 
 export default async (req: Request, res: Response, next: NextFunction) => {
+  console.log("Middleware");
   const bearerHeader = req.headers.authorization;
 
   const error: ErrorMsg = {};
@@ -14,6 +15,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     res.locals.token = bearerToken;
   } else {
     error.ERROR_MSG = "Invalid JWT token : No Bearer Header";
+    console.log("Invalid JWT token : No Bearer Header");
     return res.status(401).send(error);
   }
 

@@ -32,7 +32,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
       const prescription = new Prescriptions();
       prescription.prescriptionId=appointment.history_trid;
       prescription.title = appointment.history_title;
-      prescription.timestamp = appointment.history_date;
+      prescription.timestamp = String(appointment.history_date).substring(0,15);
       const docname = await repos.doctorRepository
         .createQueryBuilder("doc")
         .select(["doc.name"])

@@ -5,7 +5,7 @@ export class AllPrescriptionsOut {
 
 export class Prescriptions {
   doctorName:string;
-  timestamp:number;
+  timestamp:string;
   title:string;
   prescriptionId:number;
 }
