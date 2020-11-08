@@ -1,35 +1,56 @@
 import { NextFunction, Request, Response } from "express"
-import { getRepository } from "typeorm";
+import { createQueryBuilder, getRepository } from "typeorm";
 
 import { plainToClass } from "class-transformer";
 import { ErrorMsg } from "../classes/CommonCL";
-import { DetailsIn } from "../classes/Input/DetailsIn";
 import Repositories from "../classes/RepositoriesCL";
+import { AllPrescriptionsOut, Prescriptions } from "../classes/Output/AllPrescriptionsOut";
 
 const error: ErrorMsg = {};
 
 export default async (req: Request, res: Response, next: NextFunction) => {
-  const input = plainToClass(DetailsIn, req.body);
-  const userId = res.locals.jwtTokenData.id;
+  const results: AllPrescriptionsOut = plainToClass(AllPrescriptionsOut, new AllPrescriptionsOut());
+  const userId = req.params.userId;
   try {
+
     const repos = await Repositories.getInstance();
-    const usersRepository = repos.usersRepository;
-    let user = await usersRepository.findOne({ id:userId });
+    const dbResHistory = await repos.historyRepository
+      .createQueryBuilder("history")
+      .select([
+        "history.trid",
+        "history.drid",
+        "history.date",
+        "history.title"
+      ])
+      .where('history."uid"=:uid ', { uid: userId })
+      .orderBy("history.date", "DESC")
+      .getRawMany();
 
-    if(!user){
-      res.status(500).send("User id not found");
+    let appointments = [];
+    console.log("Appointments ", dbResHistory);
+    for (const appointment of dbResHistory) {
+      const prescription = new Prescriptions();
+      prescription.prescriptionId=appointment.history_trid;
+      prescription.title = appointment.history_title;
+      prescription.timestamp = String(appointment.history_date).substring(0,15);
+      const docname = await repos.doctorRepository
+        .createQueryBuilder("doc")
+        .select(["doc.name"])
+        .where('doc."drid"=:drid ', { drid: appointment.history_drid })
+        .getOne();
+      console.log("doccc ", docname.name);
+
+      prescription.doctorName = docname.name;
+     
+
+      appointments.push(prescription);
     }
-    user.age=input.age;
-    user.blood_group=input.bloodGroup;
-    user.height=input.height;
-    user.weight=input.weight;
-
-    user = await usersRepository.save(user);
-    res.status(200).send("Success");
+    results.prescriptionsAll = appointments;
+    res.status(200).send(results);
 
   } catch (err) {
     console.log(err);
-    error.ERROR_MSG = "Error in updating Data";
+    error.ERROR_MSG = "Error in retrieving Data";
     res.status(500).send(error);
   }
 }
